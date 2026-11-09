@@ -1,0 +1,31 @@
+server {
+    listen 80;
+    server_name localhost; # Или ваш IP / домен
+
+    root /var/www/my-app;
+    index index.php index.html;
+
+    # Логи доступа и ошибок
+    access_log /var/log/nginx/my-app_access.log;
+    error_log /var/log/nginx/my-app_error.log;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    # Передача PHP-запросов в PHP-FPM через Unix Socket
+    location ~ \.php$ {
+        include fastcgi_params;
+        fastcgi_intercept_errors on;
+        
+        # Указываем путь к Unix-сокету PHP-FPM (версия может отличаться, например php8.2-fpm или php8.3-fpm)
+        fastcgi_pass unix:/run/php/php-fpm.sock;
+        
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+
+    # Запрет доступа к скрытым файлам (.htaccess, .git)
+    location ~ /\.ht {
+        deny all;
+    }
+}
